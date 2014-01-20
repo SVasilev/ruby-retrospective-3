@@ -1,8 +1,19 @@
+text = "TODO    | Eat spaghetti.               | High   | food, happiness
+TODO    | Get 8 hours of sleep.        | Low    | health
+CURRENT | Party animal.                | Normal | socialization
+CURRENT | Grok Ruby.                   | High   | development, ruby
+DONE    | Have some tea.               | Normal |
+TODO    | Destroy Facebook and Google. | High   | save humanity, conspiracy
+DONE    | Do the 5th Ruby challenge.   | High   | ruby course, FMI, development, ruby
+TODO    | Find missing socks.          | Low    |
+TODO    | Occupy Sofia University      | High   | #ДАНСwithMe, #occupysu, #оставка"
+
+
 class Criteria
   attr_accessor :assets, :not
   def initialize(assets_array, not_array)
-    @assets  =  assets_array
-    @not = not_array
+    @assets = assets_array
+    @not    = not_array
   end
   def self.status(status)
     Criteria.new([[] << status] , [])
@@ -45,10 +56,10 @@ class Task
 end
 
 class TodoList
-  require 'set'
   attr_accessor :tasks
+  include Enumerable
   def initialize(tasks_array)
-    @tasks = tasks_array.to_set
+    @tasks = tasks_array
   end
   def self.parse(string)
     tasks = []
@@ -57,6 +68,7 @@ class TodoList
   end
   def filter(criteria)
     result_array = []
+    #@tasks.each { |item| p item }
     @tasks.each { |item| result_array << match(item, criteria) }
     TodoList.new(result_array.compact)
   end
@@ -82,20 +94,32 @@ class TodoList
   def completed?
     @tasks.all? { |element| element.status == :done }
   end
+
+  def each(&block)
+    @tasks.each &block
+  end
 end
 
 #Dont kill me for having functions outside the class
 def match(element, criteria)
-  return nil if criteria.not.any? { |i| element.text.include?(i.to_s) }
-  return element if criteria.assets.any? { |item| pass?(item, element) }
+  return nil if criteria.not.any? { |i| element.text.include? i.to_s }
+  return element if criteria.assets.any? { |item| pass? item, element }
 end
 
 def pass?(array, element)
-  return true if array.all? { |item| element.text.include?(convert(item)) }
+  return true if array.all? { |item| element.text.include?(convert item) }
 end
 
 def convert(item)
   return item if item.class == String
-  return item.to_s.upcase if [:todo, :current, :done].include?(item)
-  return item.to_s.capitalize if [:low, :normal, :high].include?(item)
+  return item.to_s.upcase if [:todo, :current, :done].include? item
+  return item.to_s.capitalize if [:low, :normal, :high].include? item
 end
+
+todo_list = TodoList.parse(text)
+criteria = !Criteria.status(:todo)
+
+#p criteria
+filtered = todo_list.filter criteria
+#p filtered
+#todo.filter(criteria)
