@@ -35,10 +35,7 @@ class Array
   end
 
   def average
-    return if empty?
-    sum = 0.0
-    each { |i| sum += i }
-    sum / length
+    reduce(&:+).to_f / size
   end
 
   def drop_every(n)
