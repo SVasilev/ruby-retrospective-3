@@ -4,7 +4,7 @@ class Integer
   end
 
   def prime?
-    ((2...self).none? { |i| remainder(i).zero? } and self > 0)
+    ((2...self).none? { |i| remainder(i).zero? } and self > 1)
   end
 
   def prime_factors
@@ -23,32 +23,27 @@ class Integer
   end
 
   def digits
-    result_array, self_value = [], abs
-    until self_value == 0
-      result_array << self_value % 10
-      self_value /= 10
-    end
-    result_array.reverse
+    abs.to_s.chars.map { |element| element.to_i }
   end
 end
 
 class Array
   def frequencies
     result_hash = {}
-    self.each { |i| result_hash[i] = count(i) }
+    each { |i| result_hash[i] = count(i) }
     result_hash
   end
 
   def average
     return if empty?
     sum = 0.0
-    self.each { |i| sum += i }
+    each { |i| sum += i }
     sum / length
   end
 
   def drop_every(n)
     result = []
-    self.each_index { |i| result << self[i] unless (i + 1).remainder(n).zero? }
+    each_index { |i| result << self[i] unless (i + 1).remainder(n).zero? }
     result
   end
 
@@ -62,3 +57,7 @@ class Array
     result
   end
 end
+
+
+
+p 123.to_s
