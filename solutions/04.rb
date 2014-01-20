@@ -122,33 +122,47 @@ module Asm
   extend self
   def asm(&block)
     @registers = { :ax => 0, :bx => 0, :cx => 0, :dx => 0, :ex => 0 }
-    @lines = {}
-    @lines_counter = 0
-    @last_compare_value = -2
+    @lines, @lines_counter, @last_compare_value = {},  0, -2
     instance_eval &block
-    fix_jumps
-    main_loop
+    compile
     @registers.values.take 4
   end
 
-  def fix_jumps
+  def compile
     @lines.each_value do |value|
       if value[0].to_s[0] == "j"
         value[1] = @lines[value[1]] if value[1].class != Fixnum
       end
     end
     @lines.each_key { |key| @lines.delete key if key.class != Fixnum }
+    main_loop
+  end
+
+  def execute_jump_instruction(i)
+    if send(@lines[i][0], @lines[i][1]) != 0
+      i = send @lines[i][0], @lines[i][1] - 1
+    end
+    i
+  end
+
+  def execute_normal_instruction(i)
+    send @lines[i][0], @lines[i][1], @lines[i][2] if @lines[i].class == Array
+    i
+  end
+
+  def execute_instruction(i)
+    if @lines[i][0].to_s[0] == "j"
+      execute_jump_instruction(i)
+    else
+      execute_normal_instruction(i)
+    end
   end
 
   def main_loop
-    i = 0
-    while(i < @lines.length)
-      if @lines[i][0].to_s[0] == "j"
-        i = send @lines[i][0], @lines[i][1] - 1 if send(@lines[i][0], @lines[i][1]) != 0
-      else
-        send @lines[i][0], @lines[i][1], @lines[i][2] if @lines[i].class == Array
-      end
-      i += 1
+    iteration = 0
+    while(iteration < @lines.length)
+      iteration = execute_instruction(iteration)
+      iteration += 1
     end
   end
 
