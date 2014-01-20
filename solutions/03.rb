@@ -72,7 +72,7 @@ module Graphics
     end
 
     def set_pixel(x, y)
-      @pixels[x + width * y] = true
+      @pixels[x + width * y] = true if x < width and y < height
     end
 
     def pixel_at?(x, y)
@@ -113,10 +113,23 @@ module Graphics
     def hash
       x.hash % y.hash
     end
+
+    def +(other_point)
+      Point.new x + other_point.x, y + other_point.y
+    end
+
+    def -(other_point)
+      Point.new x - other_point.x, y - other_point.y
+    end
+
+    def /(divisor)
+      Point.new x / divisor, y / divisor
+    end
   end
 
   class Line
     def initialize(from, to)
+      from, to = to, from if from.y > to.y
       @from = from
       @to = to
     end
@@ -131,11 +144,26 @@ module Graphics
                 @from.x > @to.x ? @from.y : @to.y
     end
 
-    def points(left = from, right = to, result = [left, right])
-      return result if (left.x - right.x).abs <= 1 and (left.y - right.y).abs <= 1
-      result << Point.new((left.x + right.x) / 2, (left.y + right.y) / 2)
-      points left, Point.new((left.x + right.x) / 2, (left.y + right.y) / 2), result
-      points Point.new((left.x + right.x) / 2, (left.y + right.y) / 2), right, result
+    def set_variables_for_bresenham_algorithm
+      result = from == to ? [Point.new(from.x, from.y)] : []
+      step_count = [(to.x - from.x).abs, (to.y - from.y).abs].max
+      { :step_count => step_count, :to_draw => from,
+        :delta => (to - from) / step_count.to_r, :result => result }
+    end
+
+    def bresenham
+      hash = set_variables_for_bresenham_algorithm
+
+      hash[:step_count].succ.times do
+        hash[:result] << Point.new(hash[:to_draw].x.round, hash[:to_draw].y.round)
+        hash[:to_draw] += hash[:delta]
+      end
+      hash[:result]
+    end
+
+    def points
+      return [Point.new(from.x, from.y)] if from == to
+      bresenham
     end
 
     def ==(other_line)
@@ -152,35 +180,14 @@ module Graphics
   end
 
   class Rectangle
-    def initialize(top_left, bottom_right)
-      @top_left = top_left
-      @bottom_right = bottom_right
-    end
+    attr_reader :top_left, :top_right, :bottom_left, :bottom_right, :left, :right
 
-    def top_left
-      left
-    end
+    def initialize(from, to)
+      from, to = to, from if from.x > to.x
 
-    def bottom_right
-      right
-    end
-
-    def top_right
-      Point.new bottom_right.x, top_left.y
-    end
-
-    def bottom_left
-      Point.new top_left.x, bottom_right.y
-    end
-
-    def left
-      Point.new @top_left.x < @bottom_right.x ? @top_left.x : @bottom_right.x,
-                @top_left.y < @bottom_right.y ? @top_left.y : @bottom_right.y
-    end
-
-    def right
-      Point.new @top_left.x > @bottom_right.x ? @top_left.x : @bottom_right.x,
-                @top_left.y > @bottom_right.y ? @top_left.y : @bottom_right.y
+      @left = from
+      @right = to
+      determine_corners
     end
 
     def points
@@ -200,6 +207,17 @@ module Graphics
 
     def hash
       top_left.hash + top_right.hash + bottom_right.hash + bottom_left.hash
+    end
+
+    private
+
+    def determine_corners
+      y_coordinates = [left.y, right.y]
+
+      @top_left     = Point.new left.x,  y_coordinates.min
+      @top_right    = Point.new right.x, y_coordinates.min
+      @bottom_left  = Point.new left.x,  y_coordinates.max
+      @bottom_right = Point.new right.x, y_coordinates.max
     end
   end
 end
