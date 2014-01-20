@@ -23,7 +23,7 @@ class Integer
   end
 
   def digits
-    abs.to_s.chars.map { |element| element.to_i }
+    abs.to_s.chars.map(&:to_i)
   end
 end
 
@@ -57,7 +57,3 @@ class Array
     result
   end
 end
-
-
-
-p 123.to_s
