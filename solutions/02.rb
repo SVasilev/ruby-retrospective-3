@@ -1,6 +1,6 @@
 class Criteria
   attr_accessor :assets, :not
-  
+
   def initialize(assets_array, not_array)
     @assets = assets_array
     @not    = not_array
@@ -64,7 +64,7 @@ module Comparison
   end
 
   def match(element, criteria)
-    return element if criteria.assets.empty? and 
+    return element if criteria.assets.empty? and
            criteria.not.any? { |i| element.text.include?(convert i) == false }
     return nil if criteria.not.any? { |i| element.text.include? i.to_s }
     return element if criteria.assets.any? { |item| pass? item, element }

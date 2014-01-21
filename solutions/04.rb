@@ -130,8 +130,8 @@ module Asm
 
   def compile
     @lines.each_value do |value|
-      if value[0].to_s[0] == "j"
-        value[1] = @lines[value[1]] if value[1].class != Fixnum
+      if value[0].to_s[0] == "j" and value[1].class != Fixnum
+        value[1] = @lines[value[1]]
       end
     end
     @lines.each_key { |key| @lines.delete key if key.class != Fixnum }
